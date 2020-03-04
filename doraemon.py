@@ -1,11 +1,18 @@
-import discord
+import os
+import config
+
 from discord.ext import commands
 
-bot = commands.Bot(command_prefix='$')
+bot = commands.Bot(command_prefix=config.prefix)
 
-@bot.command()
-async def ping(ctx):
-    await ctx.send('pong')
 
-bot.run('Njg0NDkzNzc1NzkxNDU2Mjgy.Xl66lg.PQQmow4HY_1zlaJQyLUrsFlxM8Y')
+@bot.event
+async def on_ready():
+    print("ready")
 
+for file in os.listdir("cogs"):
+    if file.endswith(".py"):
+        name = file[:-3]
+        bot.load_extension(f"cogs.{name}")
+
+bot.run(config.token_secret)

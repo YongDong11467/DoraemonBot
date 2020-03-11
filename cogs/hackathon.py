@@ -26,7 +26,7 @@ class Hackathon(commands.Cog):
                            (location[i].replace(' ', '')).replace('\n', '') + '\n' + url[i] + '\n\n'
         embed = discord.Embed(
             title='MLH',
-            color=discord.Color.orange(),
+            color=discord.Color.red(),
             description=
             '**▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬**\n' +
             description +

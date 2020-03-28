@@ -56,13 +56,14 @@ class Poker(commands.Cog):
                     await ctx.send("It is {0}'s turn".format(roundPlayer.name))
 
                     def check(m):
-                        return (m.content == 'fold' or m.content == 'raise') and m.author.name == roundPlayer.name
+                        return (m.content == 'fold' or m.content == 'raise' or m.content == 'check') and m.author.name == roundPlayer.name
 
                     decision = await ctx.bot.wait_for('message', check=check)
                     print(decision.content)
                     if decision.content == 'fold':
                         roundPlayers.remove(roundPlayer)
                         if roundPlayers.__len__() == 1:
+                            await ctx.send("{0} wins {1} this round".format(roundPlayers[0].name, pot))
                             break
                     elif decision.content == 'raise':
                         print('s')
@@ -72,6 +73,9 @@ class Poker(commands.Cog):
                     else:
                         print('There a bug')
                     i += 1
+
+                if roundPlayers.__len__() == 1:
+                    break
 
             # Update money for the round
             for x in range(activePlayers.__len__()):

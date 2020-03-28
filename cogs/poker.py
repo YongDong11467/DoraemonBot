@@ -24,26 +24,63 @@ class Poker(commands.Cog):
             if player.status.value == "online" and (not player.bot):
                 print(player)
                 await player.send("Your are part of a poker game!")
-                activePlayers.append(Player(player.display_name, deck.draw(2), player))
+                activePlayers.append(Player(player.name, deck.draw(2), player))
                 await player.send(Card.print_pretty_cards(activePlayers[i].hand))
                 i += 1
 
         if activePlayers.__len__() < 2:
             await ctx.send("You need at least two players to start a poker game")
 
-        i = 0
         while activePlayers.__len__() > 1:
-            i %= activePlayers.__len__()
-            await ctx.send("It is {0}'s turn".format(activePlayers[i].name))
+            #TODO track players in current round
+            #TODO player specified raise
+            #TODO track pot size
 
-            def check(m):
-                # Could display name and actual name be diff?
-                return (m.content == 'fold' or m.content == 'raise') and m.author == activePlayers[i].name
+            roundPlayers = activePlayers.copy()
+            i = 0
+            pot = 0
 
-            decision = await ctx.bot.wait_for('message', check=check)
-            print(decision)
-            i += 1
+            # Start of new round
 
+            # track money in round to update at end
+            gainLost = []
+            for x in range(activePlayers.__len__()):
+                gainLost.append(0)
+
+            for x in range(3):
+
+                curBid = 1000
+
+                for roundPlayer in roundPlayers:
+                    i %= roundPlayers.__len__()
+                    await ctx.send("It is {0}'s turn".format(roundPlayer.name))
+
+                    def check(m):
+                        return (m.content == 'fold' or m.content == 'raise') and m.author.name == roundPlayer.name
+
+                    decision = await ctx.bot.wait_for('message', check=check)
+                    print(decision.content)
+                    if decision.content == 'fold':
+                        roundPlayers.remove(roundPlayer)
+                        if roundPlayers.__len__() == 1:
+                            break
+                    elif decision.content == 'raise':
+                        print('s')
+                    elif decision.content == 'check':
+                        gainLost[i] -= curBid
+                        pot += curBid
+                    else:
+                        print('There a bug')
+                    i += 1
+
+            # Update money for the round
+            for x in range(activePlayers.__len__()):
+                activePlayers[x].chipSum += gainLost[x]
+
+            # Check again for player that are out of the game
+            for player in activePlayers:
+                if player.chipSum <= 0:
+                    activePlayers.remove(player)
 
 def setup(bot):
     bot.add_cog(Poker(bot))

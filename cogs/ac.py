@@ -85,25 +85,23 @@ class AnimalCrossing(commands.Cog):
         description = ''
         browser.get('https://nookazon.com/products?search=' + arg)
         try:
-            WebDriverWait(browser, 20).until(
-                EC.presence_of_element_located((By.CLASS_NAME, 'item-img-container'))
+            WebDriverWait(browser, 30).until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'item'))
             )
             html = browser.page_source
         except TimeoutException:
-            return await ctx.send("Timed out waiting for page to load")
-        finally:
-            browser.quit()
+            return await ctx.send('Timed out waiting for page to load')
 
         soup = BeautifulSoup(html, 'html.parser')
-        name = soup.find_all('div', class_='sc-fzoXzr eyWNWx')
-        productURL = soup.find_all('a', class_='sc-AxjAm kCLLqI item-img')
-        if len(name) > 0:
-            for i in range(len(name)):
-                items.append(name[i].get_text())
-                id.append(productURL[i].get('href'))
+        numOfItem = soup.select('.item > :nth-child(3)')
+        if len(numOfItem) > 0:
+            for i in soup.select('.item > :nth-last-child(2)'):
+                items.append(i.get_text())
+            for i in soup.select('.item > :nth-child(1) > :nth-child(1)'):
+                id.append(i.get('href'))
         else:
             return await ctx.send('No result.')
-        for i in range(len(name)):
+        for i in range(len(numOfItem)):
             description += str(i + 1) + '. ' + items[i] + '\n'
         embed = discord.Embed(
             title='Nookazon',
@@ -125,15 +123,15 @@ class AnimalCrossing(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send('Sorry, timed out')
 
-        if 0 < int(answer.content) <= len(name):
-            browser = webdriver.Chrome(executable_path='C:/Users/Tina/Documents/chromedriver_win32/chromedriver.exe')
+        if 0 < int(answer.content) <= len(numOfItem):
+            #browser = webdriver.Chrome(executable_path='C:/Users/Tina/Documents/chromedriver_win32/chromedriver.exe')
             itemName = items[int(answer.content) - 1]
             browser.get('https://nookazon.com' + id[int(answer.content) - 1])
         else:
             return await ctx.send('Error: Please restart and enter a valid number')
 
         try:
-            WebDriverWait(browser, 30).until(
+            WebDriverWait(browser, 15).until(
                 EC.presence_of_element_located((By.CLASS_NAME, 'listing-product-info'))
             )
             html = browser.page_source
@@ -157,7 +155,10 @@ class AnimalCrossing(commands.Cog):
             for i in soup.select(
                     ".listing-product-info > :nth-child(1) > :nth-child(3) > :nth-child(1) > "
                     ":nth-child(1) > :nth-child(1)"):
-                price.append(i.get_text())
+                if i.get_text() == '':
+                    price.append('Touch trade')
+                else:
+                    price.append(i.get_text())
         else:
             return await ctx.send('No Listing Currently.')
 
